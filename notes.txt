@@ -1,0 +1,22 @@
+onyix run -> look for config file
+onix file.ox -> run the file
+
+all methods should be copied
+
+
+Memory safety using owner-ship : each field default owner to class, move owner with obj.own(other)
+
+
+
+{
+    poolStack;
+    poolStack.push(new pool)
+    {
+        poolStack.push(new pool)
+
+
+
+        poolStack.last().free()
+    }
+    poolStack.last().free()
+}
