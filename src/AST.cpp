@@ -29,7 +29,6 @@ void BlockAST::analyse(SymbolTable &table) {
     table.exitScope();
 }
 
-
 string BlockAST::code() {
     string code = "{\n";
     for (const auto& stmt : statements) {
@@ -72,15 +71,20 @@ void VariableExprAST::analyse(SymbolTable &table, string &a) {
 }
 
 void VariableExprAST::analyse(SymbolTable &table, string &a, const std::string &currentStruct) {
-    const auto symbol = table.lookupSymbol(name);
-    if (!symbol) {
-        Logger::Error("Variable '" + name + "' not declared.");
-        a = "error_type";
+    if (const auto symbol = table.lookupSymbol(name)) {
+        a = symbol->type;
+        isField = false;
+        return;
     }
-    a = symbol->type;
     if (!currentStruct.empty()) {
-        isField = true;
+        if (const auto fieldSymbol = table.lookupField(currentStruct, name)) {
+            a = fieldSymbol->type;
+            isField = true;
+            return;
+        }
     }
+    Logger::Error("Variable '" + name + "' not declared.");
+    a = "error_type";
 }
 
 string VariableExprAST::code() {
@@ -122,7 +126,11 @@ void FunctionDefinitionAST::prePass(SymbolTable &table) {
     }
 }
 
-void FunctionDefinitionAST::analyse(SymbolTable& table) {
+void FunctionDefinitionAST::analyse(SymbolTable &table) {
+    analyse(table, "");
+}
+
+void FunctionDefinitionAST::analyse(SymbolTable& table, string parentStruct) {
     table.enterScope();
 
     for (const auto& param : params) {
@@ -143,13 +151,22 @@ void FunctionDefinitionAST::analyse(SymbolTable& table) {
         // TODO : void functions
         for (const auto& stmt : block->statements) {
             if (const auto ret = dynamic_cast<ReturnAST*>(stmt.get())) {
-                ret->value->analyse(table, type);
+                if (const auto var = dynamic_cast<VariableExprAST*>(ret->value.get())) {
+                    var->analyse(table, type, parentStruct);
+                } else {
+                    ret->value->analyse(table, type);
+                }
                 if (type != returnType->type) {
                     Logger::Error("Invalid return type, expected '"+returnType->type+"' but found '"+type+"'.");
                 }
                 continue;
             }
-            stmt->analyse(table);
+            if (const auto var = dynamic_cast<VariableExprAST*>(stmt.get())) {
+                string tmp;
+                var->analyse(table, tmp, parentStruct);
+            } else {
+                stmt->analyse(table);
+            }
         }
     }
     if (type.empty()) {
@@ -283,7 +300,7 @@ string ConstructorDefinitionAST::code() {
 void ExtendsStatementAST::analyse(SymbolTable& table) {
     for (auto& member : members) {
         if (auto* method = dynamic_cast<FunctionDefinitionAST*>(member.get())) {
-            method->analyse(table, this->structName);
+            method->analyse(table, structName);
         }
         // TODO : else analyse case
     }

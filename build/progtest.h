@@ -18,7 +18,7 @@ typedef struct {
 Parent* Parent_new(int a, float b);
 
 // Method prototypes
-void Child_fun_test_int(Child* self, int a);
-void Parent_fun_test_int(Parent* self, int a);
+int Child_fun_testMethod_int(Child* self, int tt);
+int Parent_fun_testMethod_int(Parent* self, int tt);
 
 #endif

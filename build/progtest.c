@@ -8,8 +8,14 @@ Parent* Parent_new(int a, float b) {
 	self->b = b;
 	return self;
 }
-void Child_fun_test_int(Child* self, int a);
-void Parent_fun_test_int(Parent* self, int a);
+int Child_fun_testMethod_int(Child* self, int tt){
+return self->a;
+}
+
+int Parent_fun_testMethod_int(Parent* self, int tt){
+return self->a;
+}
+
 //
 
 int fun_test_int_int(int a, int b){

@@ -134,7 +134,8 @@ public:
     std::unique_ptr<AST> body; // Can be a BlockAST or an ExprAST for single-line functions
 
     void prePass(SymbolTable& table) override;
-    void analyse(SymbolTable& table, const std::string& structName);
+    void analyse(SymbolTable &table) override;
+    void analyse(SymbolTable &table, string parentStruct);
 
     FunctionDefinitionAST(std::unique_ptr<TypeAST> retType, std::string n,
                           std::vector<std::unique_ptr<FunctionParameterAST>> p,

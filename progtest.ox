@@ -6,7 +6,8 @@ struct Parent {
 }
 
 extends Parent {
-    void test(int a) {
+    int testMethod(int tt) {
+        return a;
     }
 }
 

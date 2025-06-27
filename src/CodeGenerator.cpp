@@ -83,7 +83,7 @@ string CodeGenerator::generateHeader() {
                     }
                 }
 
-                // Ajouter les nouveaux membres
+                // Add new members
                 for (auto& member : ext->members) {
                     if (const auto var = dynamic_cast<VariableDeclarationAST*>(member.get())) {
                         allStructFields[ext->structName].insert(var->code());
@@ -91,14 +91,14 @@ string CodeGenerator::generateHeader() {
                         // C'est une méthode
                         string proto = method->code(true);
                         //implementation += proto;
-                        structMethods[ext->structName].insert(proto.substr(0, proto.find('{')) + ";");
+                        structMethods[ext->structName].insert(proto);
                     } else if (const auto ctor = dynamic_cast<ConstructorDefinitionAST*>(member.get())) {
                         // C'est un constructeur défini par l'utilisateur
                         // Il faut lui passer le nom de la struct !
                         ctor->structName = ext->structName;
                         string proto = ctor->code();
                         //implementation += proto;
-                        structCtors[ext->structName].push_back(proto.substr(0, proto.find('{')) + ";");
+                        structCtors[ext->structName].push_back(proto);
                     }
                 }
             }
@@ -120,7 +120,7 @@ string CodeGenerator::generateHeader() {
         // S'il y a des constructeurs customs, on les ajoute
         if (!protos.empty()) {
             for (const string& proto : protos) {
-                headerCode += proto + "\n";
+                headerCode += proto.substr(0, proto.find('{')) + ";" + "\n";
             }
         } else if (structFields.contains(name)) {
             // ** AUCUN constructeur custom -> Générer le constructeur par défaut **
@@ -155,7 +155,7 @@ string CodeGenerator::generateHeader() {
             string tmp = proto;
             tmp.insert(tmp.find("fun"), name + "_");
             tmp.insert(tmp.find("* self"), name);
-            headerCode += tmp;
+            headerCode += tmp.substr(0, tmp.find('{')) + ";";
 
             implementation += tmp + '\n';
             /*size_t pos = implementation.find(tmp);
