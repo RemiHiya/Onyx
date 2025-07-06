@@ -123,25 +123,42 @@ string CodeGenerator::generateHeader() {
                 headerCode += proto.substr(0, proto.find('{')) + ";" + "\n";
             }
         } else if (structFields.contains(name)) {
-            // ** AUCUN constructeur custom -> Générer le constructeur par défaut **
-            string proto = name + "* " + name + "_new(";
-            string ctorImpl = proto;
+            // No constructor, fallback to default
+            string signatureName = "fun_" + name;
+
+            string paramsList = "";
             string ctorBody = " {\n\t" + name + "* self = alloc(sizeof(" + name + "));\n";
 
             const auto& fields = structFields.at(name);
             for (size_t i = 0; i < fields.size(); ++i) {
-                proto += fields[i];
-                ctorImpl += fields[i];
-                // ex: "int my_field" -> on extrait "my_field"
-                string fieldName = fields[i].substr(fields[i].find(' ') + 1);
+                const string& fullFieldDecl = fields[i];
+
+                // On doit extraire le type et le nom du champ
+                size_t spacePos = fullFieldDecl.find(' ');
+                if (spacePos == string::npos) continue; // Sécurité, ne devrait pas arriver
+                string fieldType = fullFieldDecl.substr(0, spacePos); // Ex: "int"
+                string fieldName = fullFieldDecl.substr(spacePos + 1); // Ex: "x"
+
+                // On ajoute le type au nom de la signature
+                signatureName += "_" + fieldType; // Ex: "Point_new_int"
+
+                // On ajoute la déclaration complète du paramètre à la liste
+                paramsList += fullFieldDecl;
+
+                // On ajoute l'assignation au corps de la fonction
                 ctorBody += "\tself->" + fieldName + " = " + fieldName + ";\n";
+
+                // Ajoute la virgule si ce n'est pas le dernier paramètre
                 if (i < fields.size() - 1) {
-                    proto += ", ";
-                    ctorImpl += ", ";
+                    paramsList += ", ";
                 }
             }
-            proto += ");";
-            ctorImpl += ")";
+
+            // 4. On assemble le tout pour former le prototype et l'implémentation
+            string returnType = name + "* ";
+            string proto = returnType + signatureName + "(" + paramsList + ");";
+            string ctorImpl = returnType + signatureName + "(" + paramsList + ")";
+
             ctorBody += "\treturn self;\n}\n";
 
             headerCode += proto + "\n";

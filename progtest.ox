@@ -21,5 +21,6 @@ int test(int a, int b) {
 }
 
 int main() {
+    Parent test = Parent(42, 0.69);
     return test(1, 2);
 }

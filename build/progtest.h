@@ -5,8 +5,7 @@
 typedef struct {
 	float b;
 	int a;
-	int c;
-} Child;
+	int c} Child;
 
 typedef struct {
 	float b;
@@ -15,7 +14,7 @@ typedef struct {
 
 
 // Constructor prototypes
-Parent* Parent_new(int a, float b);
+Parent* fun_Parent_int_float(int a, float b);
 
 // Method prototypes
 int Child_fun_testMethod_int(Child* self, int tt);

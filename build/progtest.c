@@ -2,7 +2,7 @@
 #include "progtest.h"
 
 // Methods and Constructors implementation:
-Parent* Parent_new(int a, float b) {
+Parent* fun_Parent_int_float(int a, float b) {
 	Parent* self = alloc(sizeof(Parent));
 	self->a = a;
 	self->b = b;
@@ -22,6 +22,7 @@ int fun_test_int_int(int a, int b){
 return a + b;
 }
 int main(){
+Parent test=fun_Parent_int_float(42, 0.690000f);
 return fun_test_int_int(1, 2);
 }
 

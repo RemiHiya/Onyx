@@ -32,7 +32,7 @@ void BlockAST::analyse(SymbolTable &table) {
 string BlockAST::code() {
     string code = "{\n";
     for (const auto& stmt : statements) {
-        code += stmt->code();
+        code += stmt->code() + ";\n";
     }
     code += "}\n";
     return code;
@@ -164,6 +164,9 @@ void FunctionDefinitionAST::analyse(SymbolTable& table, string parentStruct) {
             if (const auto var = dynamic_cast<VariableExprAST*>(stmt.get())) {
                 string tmp;
                 var->analyse(table, tmp, parentStruct);
+            } else if (const auto expr = dynamic_cast<ExprAST*>(stmt.get())){
+                string tmp;
+                expr->analyse(table, tmp);
             } else {
                 stmt->analyse(table);
             }
@@ -225,6 +228,7 @@ void StructDefinitionAST::prePass(SymbolTable &table) {
 
 void StructDefinitionAST::analyse(SymbolTable &table) {
     table.enterScope();
+    string sign;
 
     for (const auto& generic : genericParams) {
         if (!table.addSymbol(generic->name, {"generic", SymbolInfo::Generic})) {
@@ -234,7 +238,9 @@ void StructDefinitionAST::analyse(SymbolTable &table) {
     for (const auto& field : fields) {
         if (!table.addSymbol(field->name, {field->type->type, SymbolInfo::Variable})) {
             Logger::Error("Field '" + field->name + "' already defined in the current structure '" + name + "'.");
+            continue;
         }
+        sign += "_" + field->type->type;
     }
     StructFieldMap fieldsMap;
     for (const auto& field : fields) {
@@ -243,6 +249,7 @@ void StructDefinitionAST::analyse(SymbolTable &table) {
     table.addStruct(name, fieldsMap);
 
     table.exitScope();
+    table.addSymbol("fun_" + name + sign, {name});
 }
 
 void ConstructorDefinitionAST::prePass(SymbolTable &table) {
@@ -316,7 +323,7 @@ bool ExtendsStatementAST::isFieldOnly() {
 }
 
 string ReturnAST::code() {
-    return "return " + value->code() + ";\n";
+    return "return " + value->code();
 }
 
 string ExternExprAST::code() {
@@ -340,7 +347,7 @@ void FunctionCallAST::analyse(SymbolTable &table, string &a) {
             a = "error_type";
             return;
         }
-        a = name + "*"; // Le constructeur retourne un pointeur
+        a = name + "*";
         return;
     }
 
@@ -416,8 +423,8 @@ void VariableDeclarationAST::analyse(SymbolTable &table) {
 
 string VariableDeclarationAST::code() {
     if (initializer)
-        return type->code() + ' ' + name + '=' + initializer->code() + ";\n";
-    return type->code() + ' ' + name + ";\n";
+        return type->code() + ' ' + name + '=' + initializer->code();
+    return type->code() + ' ' + name;
 }
 
 void VariableAssignmentAST::analyse(SymbolTable &table) {
