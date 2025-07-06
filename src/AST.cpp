@@ -5,6 +5,7 @@
 #include "AST.h"
 
 #include <format>
+#include <set>
 
 #include "Logger.h"
 
@@ -112,9 +113,19 @@ string OperationExprAST::code() {
     return LHS->code() + ' ' + ope + ' ' + RHS->code();
 }
 
-string TypeAST::code() {
-    return type;
+// REWORK : maybe add other primitives
+bool isPrimitive(const string& type) {
+    const set<string> primitives = {"int", "float", "double", "bool"};
+    return primitives.contains(type);
 }
+
+string TypeAST::code() {
+    if (isPrimitive(type)) {
+        return type;
+    }
+    return type + "*";
+}
+
 
 string FunctionParameterAST::code() {
     return type->code() + ' ' + name;
