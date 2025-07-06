@@ -181,7 +181,7 @@ std::vector<Token> Lexer::tokenize() {
             current = matchKeywordOrIdentifier(tokenStartCol);
         } else if (c == '"') {
             current = matchString(tokenStartCol);
-        } else if (std::isdigit(c) || c == '.') {   // supports float declaration like : .5 (instead of 0.5)
+        } else if (std::isdigit(c) || (c == '.' && std::isdigit(peek(1)))) {   // supports float declaration like : .5 (instead of 0.5)
             current = matchNumber(tokenStartCol);
         }
 
