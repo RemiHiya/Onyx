@@ -43,7 +43,7 @@ optional<string> Onyx::Compile(const string &sourcefile) {
             stream << "#ifndef " << module << "_H" << endl << "#define " << module << "_H" << endl;
 
             // TODO : import builtins
-            stream << "#include \"pool.h\"" << endl;
+            stream << "#include \"builtins.h\"" << endl << endl;
 
             stream << generator.generateHeader() << endl;
 

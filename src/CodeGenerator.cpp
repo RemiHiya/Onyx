@@ -109,7 +109,7 @@ string CodeGenerator::generateHeader() {
     for (const auto& [name, fields] : allStructFields) {
         headerCode += "typedef struct {\n";
         for (const string& field : fields) {
-            headerCode += '\t' + field;
+            headerCode += '\t' + field + ";\n";
         }
         headerCode += "} " + name + ";\n\n";
     }
