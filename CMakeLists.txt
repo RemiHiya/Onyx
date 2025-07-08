@@ -23,6 +23,8 @@ add_executable(Onyx src/main.cpp
         src/CodeGenerator.h
         src/IR/pool.c
         src/IR/pool.h
+        src/IR/memory.c
+        src/IR/memory.h
         # should be removed later
         # ---
 )
