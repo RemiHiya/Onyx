@@ -169,6 +169,7 @@ class MethodCallAST final : public FunctionCallAST {
 public:
     string owner;
     void analyse(SymbolTable& table, string& a) override;
+    string code() override;
     MethodCallAST(string owner, string name, vector<unique_ptr<ExprAST>> params) :
         FunctionCallAST(move(name), move(params)), owner(move(owner)) {}
 };

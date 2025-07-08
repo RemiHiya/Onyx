@@ -228,7 +228,7 @@ string FunctionDefinitionAST::getSignature() {
 }
 
 string StructFieldAST::code() {
-    return type->code() + ' ' + name + ";\n";
+    return type->code() + ' ' + name;
 }
 
 void StructDefinitionAST::prePass(SymbolTable &table) {
@@ -319,6 +319,9 @@ void ExtendsStatementAST::analyse(SymbolTable& table) {
     for (auto& member : members) {
         if (auto* method = dynamic_cast<FunctionDefinitionAST*>(member.get())) {
             method->analyse(table, structName);
+            if (!table.addSymbol(structName + '_' + method->getSignature(), {method->returnType->type})) {
+                Logger::Error("Method " + method->name + " already defined in struct " + structName + ".");
+            }
         }
         // TODO : else analyse case
     }
@@ -393,7 +396,7 @@ string FunctionCallAST::code() {
 
 // REWORK : check object
 void MethodCallAST::analyse(SymbolTable &table, string &a) {
-    string signature = name;
+    signature = table.lookupSymbol(owner)->type + "_fun_" + name;
     for (const auto& param : params) {
         string tmp;
         param->analyse(table, tmp);
@@ -404,8 +407,20 @@ void MethodCallAST::analyse(SymbolTable &table, string &a) {
     if (!symbol || symbol->metaType != SymbolInfo::Function) {
         Logger::Error("Function '" + name + "' not declared. (signature : "+signature+").");
         a = "error_type";
+        return;
     }
     a = symbol->type;
+}
+
+string MethodCallAST::code() {
+    string code = signature + '(' + owner + ", ";
+    for (auto& param : params) {
+        code += param->code();
+        if (param != params.back()) {
+            code += ", ";
+        }
+    }
+    return code + ')';
 }
 
 void VariableDeclarationAST::analyse(SymbolTable &table) {

@@ -23,6 +23,7 @@ return a + b;
 }
 int main(){
 Parent* test=fun_Parent_int_float(42, 0.690000f);
+Parent_fun_testMethod_int(test, 1);
 return fun_test_int_int(1, 2);
 }
 
