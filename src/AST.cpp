@@ -209,7 +209,16 @@ string FunctionDefinitionAST::code(bool isMethod) {
     if (const auto expr = dynamic_cast<ExprAST*>(body.get())) {
         code += "{ return "+ expr->code() +"; }";
     } else if (const auto block = dynamic_cast<BlockAST*>(body.get())) {
-        code += block->code();
+        if (name == "main") {
+            code += "{\n";
+            code += "\tinitGlobalPool(0, 0);";
+            for (const auto& stmt : block->statements) {
+                code += '\t' + stmt->code() + ";\n";
+            }
+            code += "}\n";
+        } else {
+            code += block->code();
+        }
     }
 
     return code;

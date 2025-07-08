@@ -1,4 +1,4 @@
-//extern analysisTest*;
+extern analysisTest*;
 
 struct Parent {
     int a;
@@ -23,5 +23,5 @@ int test(int a, int b) {
 int main() {
     Parent test = Parent(42, 0.69);
     test.testMethod(1);
-    return test(1, 2);
+    return ret;
 }

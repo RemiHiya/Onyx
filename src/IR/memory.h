@@ -37,6 +37,7 @@ void enter_scope_impl(PtrIntList* list);
 bool register_ptr_impl(PtrIntList* list, void* ptr);
 bool exit_scope_impl(PtrIntList* list);
 bool move_ptr_impl(PtrIntList* list, void* ptr, int new_scope_level);
+PtrIntList* create_ptr_int_list_impl(int initial_max_int_value, int hash_table_capacity);
 
 // API :
 extern PtrIntList* global_pool;

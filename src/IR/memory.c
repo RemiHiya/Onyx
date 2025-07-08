@@ -3,6 +3,9 @@
 //
 
 #include "memory.h"
+#include <stdlib.h>
+#include <stdbool.h>
+#include <stdio.h>
 
 // Hash function for void*
 unsigned int hash_void_ptr(void* ptr, const int capacity) {
@@ -352,4 +355,8 @@ bool move_ptr_impl(PtrIntList* list, void* ptr, const int new_scope_level) {
         return false;
     }
     return add_or_update_association(list, ptr, new_scope_level);
+}
+
+PtrIntList* create_ptr_int_list_impl(const int initial_max_int_value, const int hash_table_capacity) {
+    return create_ptr_int_list(initial_max_int_value, hash_table_capacity);
 }
