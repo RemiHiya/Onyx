@@ -21,10 +21,9 @@ add_executable(Onyx src/main.cpp
         src/SymbolTable.h
         src/CodeGenerator.cpp
         src/CodeGenerator.h
-        src/IR/pool.c
-        src/IR/pool.h
         src/IR/memory.c
         src/IR/memory.h
+        build/builtins.h
         # should be removed later
         # ---
 )

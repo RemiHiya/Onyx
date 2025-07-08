@@ -5,6 +5,8 @@
 #ifndef MEMORY_H
 #define MEMORY_H
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 // Node for linked list of pointeurs
 typedef struct VoidPtrNode {
@@ -38,17 +40,17 @@ bool move_ptr_impl(PtrIntList* list, void* ptr, int new_scope_level);
 
 // API :
 extern PtrIntList* global_pool;
-#define enterScope() _enter_scope_impl(global_pool)
-#define register_ptr(ptr) _register_ptr_impl(global_pool, ptr)
-#define exitScope() _exit_scope_impl(global_pool)
-#define move_ptr(ptr, new_scope_level) _move_ptr_impl(global_pool, ptr, new_scope_level)
+#define enterScope() enter_scope_impl(global_pool)
+#define register_ptr(ptr) register_ptr_impl(global_pool, ptr)
+#define exitScope() exit_scope_impl(global_pool)
+#define move_ptr(ptr, new_scope_level) move_ptr_impl(global_pool, ptr, new_scope_level)
 
 #define initGlobalPool(initial_max_int_value, hash_table_capacity) \
-(global_pool = _create_ptr_int_list_impl(initial_max_int_value, hash_table_capacity))
+(global_pool = create_ptr_int_list_impl(initial_max_int_value, hash_table_capacity))
 
 #define destroyGlobalPool() \
     do { \
-        _destroy_ptr_int_list_impl(global_pool); \
+        destroy_ptr_int_list_impl(global_pool); \
         global_pool = NULL; \
     } while(0)
 

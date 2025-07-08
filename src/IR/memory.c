@@ -3,9 +3,6 @@
 //
 
 #include "memory.h"
-#include <stdlib.h>
-#include <stdbool.h>
-#include <stdio.h>
 
 // Hash function for void*
 unsigned int hash_void_ptr(void* ptr, const int capacity) {
