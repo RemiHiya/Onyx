@@ -24,7 +24,7 @@ public:
     optional<string> Compile(const string &sourcefile);
     unique_ptr<BlockAST> BuildAST(const string& sourcefile);
     map<string, unique_ptr<BlockAST>> BuildASTMap(const string& sourcefile);
-    void AnalyseAST(const std::unique_ptr<BlockAST> &ast);
+    void AnalyseAST(const std::unique_ptr<BlockAST> &ast, SymbolTable table);
 };
 
 #endif //ONYX_H
