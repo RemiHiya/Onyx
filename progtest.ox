@@ -1,4 +1,4 @@
-extern analysisTest*;
+//extern analysisTest*;
 
 struct Parent {
     int a;
@@ -11,17 +11,7 @@ extends Parent {
     }
 }
 
-Child extends Parent {
-    int c;
-
-}
-
-int test(int a, int b) {
-    return a+b;
-}
-
 int main() {
     Parent test = Parent(42, 0.69);
-    test.testMethod(1);
-    return ret;
+    return test.testMethod(1);
 }

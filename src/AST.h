@@ -167,11 +167,11 @@ public:
 
 class MethodCallAST final : public FunctionCallAST {
 public:
-    string owner;
+    unique_ptr<ExprAST> ownerExpr;
     void analyse(SymbolTable& table, string& a) override;
     string code() override;
-    MethodCallAST(string owner, string name, vector<unique_ptr<ExprAST>> params) :
-        FunctionCallAST(move(name), move(params)), owner(move(owner)) {}
+    MethodCallAST(unique_ptr<ExprAST> owner, string name, vector<unique_ptr<ExprAST>> params) :
+        FunctionCallAST(move(name), move(params)), ownerExpr(move(owner)) {}
 };
 
 class VariableDeclarationAST final : public AST {

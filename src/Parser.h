@@ -28,6 +28,7 @@ public:
     unique_ptr<AST> parseStatement();
     void eat(TokenType type);
     unique_ptr<ExprAST> parseExpr();
+    unique_ptr<ExprAST> parsePostfixExpr();
     unique_ptr<ExprAST> parseOpRHS(int exprPrecedence, unique_ptr<ExprAST> LHS);
     unique_ptr<ExprAST> parsePrimary();
     unique_ptr<ExprAST> parseUnaryExpr();

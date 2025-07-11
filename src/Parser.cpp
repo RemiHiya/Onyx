@@ -159,12 +159,6 @@ unique_ptr<AST> Parser::parseStatement() {
         case TokenType::T_If:      return parseIfStatement();
         case TokenType::T_Static:  return parseStaticDefinition();
         case TokenType::T_ID: {
-            if (peek(1).type == TokenType::T_Dot) {
-                return parseMethodCall(false);
-            }
-            if (peek(1).type == TokenType::T_StaticCall) {
-                return parseMethodCall(true);
-            }
             if (peek(1).type == TokenType::T_LParen) {
                 return parseFunctionCall();
             }
@@ -195,10 +189,55 @@ unique_ptr<AST> Parser::parseStatement() {
 }
 
 unique_ptr<ExprAST> Parser::parseExpr() {
-    auto LHS = parsePrimary();
+    auto LHS = parsePostfixExpr();
     if (!LHS)
         return nullptr;
     return parseOpRHS(0, move(LHS));
+}
+
+unique_ptr<ExprAST> Parser::parsePostfixExpr() {
+    auto expr = parsePrimary();
+    if (!expr)
+        return nullptr;
+
+    // If a '.' is found, then process the method call
+    // TODO : field access (obj.field)
+    while (true) {
+        if (currentToken.type == TokenType::T_Dot) {
+            nextToken(); // Eat the dot
+
+            if (currentToken.type != TokenType::T_ID) {
+                Logger::Error("Expected method name after '.'.");
+                return nullptr;
+            }
+            std::string methodName = currentToken.value;
+            nextToken(); // eat the method name
+
+            eat(TokenType::T_LParen);
+
+            // Parse method args
+            std::vector<unique_ptr<ExprAST>> args;
+            if (currentToken.type != TokenType::T_RParen) {
+                while (true) {
+                    if (auto arg = parseExpr())
+                        args.push_back(move(arg));
+                    else
+                        return nullptr;
+
+                    if (currentToken.type == TokenType::T_RParen)
+                        break;
+                    eat(TokenType::T_Comma);
+                }
+            }
+            eat(TokenType::T_RParen);
+
+            expr = make_unique<MethodCallAST>(move(expr), methodName, move(args));
+        } else {
+            // Break if it's not a '.'
+            break;
+        }
+    }
+    return expr;
 }
 
 unique_ptr<ExprAST> Parser::parseOpRHS(const int exprPrecedence, unique_ptr<ExprAST> LHS) {
@@ -487,34 +526,7 @@ unique_ptr<FunctionCallAST> Parser::parseFunctionCall() {
     return make_unique<FunctionCallAST>(funcName, std::move(params));
 }
 
-// owner.method(params...) - Class::method(params...)
-unique_ptr<MethodCallAST> Parser::parseMethodCall(const bool isStatic) {
-    string owner = currentToken.value;
-    eat(TokenType::T_ID);
-    if (isStatic) {
-        eat(TokenType::T_StaticCall);
-    } else {
-        eat(TokenType::T_Dot);
-    }
-    string funcName = currentToken.value;
-    eat(TokenType::T_ID);
 
-    eat(TokenType::T_LParen);
-    std::vector<unique_ptr<ExprAST>> params;
-    if (currentToken.type != TokenType::T_RParen) {
-        while (true) {
-            if (auto param = parseExpr()) {
-                params.push_back(std::move(param));
-            } else {
-                return nullptr;
-            }
-            if (currentToken.type == TokenType::T_RParen) break;
-            eat(TokenType::T_Comma);
-        }
-    }
-    eat(TokenType::T_RParen);
-    return make_unique<MethodCallAST>(owner, funcName, std::move(params));
-}
 
 // type var - type var = ...
 unique_ptr<VariableDeclarationAST> Parser::parseVariableDeclaration() {

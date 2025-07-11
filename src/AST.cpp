@@ -405,16 +405,30 @@ string FunctionCallAST::code() {
 
 // REWORK : check object
 void MethodCallAST::analyse(SymbolTable &table, string &a) {
-    signature = table.lookupSymbol(owner)->type + "_fun_" + name;
+    // Analyse the owner type
+    string ownerType;
+    ownerExpr->analyse(table, ownerType);
+
+    if (ownerType == "error_type") {
+        a = "error_type";
+        return;
+    }
+
+    // Extract the type (without the pointer symbol)
+    if (!ownerType.empty() && ownerType.back() == '*') {
+        ownerType.pop_back();
+    }
+    signature = ownerType + "_fun_" + name;
     for (const auto& param : params) {
         string tmp;
         param->analyse(table, tmp);
         signature += '_' + tmp;
     }
 
+    // Check if the method acually exists
     const auto symbol = table.lookupSymbol(signature);
     if (!symbol || symbol->metaType != SymbolInfo::Function) {
-        Logger::Error("Function '" + name + "' not declared. (signature : "+signature+").");
+        Logger::Error("Method '" + name + "' not declared. (signature : "+signature+").");
         a = "error_type";
         return;
     }
@@ -422,7 +436,10 @@ void MethodCallAST::analyse(SymbolTable &table, string &a) {
 }
 
 string MethodCallAST::code() {
-    string code = signature + '(' + owner + ", ";
+    string code = signature + '(' + ownerExpr->code();
+    if (!params.empty()) {
+        code += ", ";
+    }
     for (auto& param : params) {
         code += param->code();
         if (param != params.back()) {
