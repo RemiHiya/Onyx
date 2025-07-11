@@ -16,15 +16,15 @@
 string CodeGenerator::generate() const {
     string code;
 
-    // Ajouter l'implémentation des méthodes et constructeurs
+    // Implementation for defined methods
     code += "\n// Methods and Constructors implementation:\n";
     code += implementation;
     code += "//\n\n";
 
-    // Traiter le code global (ex: la fonction main)
+    // Handle the global block (per module)
     if (const auto block = dynamic_cast<BlockAST*>(ast.get())) {
         for (const auto& stmt : block->statements) {
-            // On ne génère que ce qui n'est pas une définition de type (déjà fait)
+            // Do not generate code for struct and extends (already done in header generation)
             if (!dynamic_cast<StructDefinitionAST*>(stmt.get()) && !dynamic_cast<ExtendsStatementAST*>(stmt.get())) {
                 code += stmt->code();
             }
@@ -42,7 +42,7 @@ string CodeGenerator::generateHeader() {
     map<string, set<string>> structMethods;        // map de struct -> prototype des méthodes
     map<string, vector<string>> structCtors;       // map de struct -> prototype des constructeurs
 
-    // --- PASS 1: Collecter les définitions de struct (champs de base) ---
+    // --- PASS 1: Generate header for structs ---
     if (const auto block = dynamic_cast<BlockAST*>(ast.get())) {
         for (const auto& stmt : block->statements) {
             if (const auto structDef = dynamic_cast<StructDefinitionAST*>(stmt.get())) {
@@ -57,7 +57,7 @@ string CodeGenerator::generateHeader() {
         }
     }
 
-    // --- PASS 2: Gérer les extends (héritage, méthodes, constructeurs) ---
+    // --- PASS 2: Generate header for extension (inheritance, methods, constructors) ---
     // FIXME : Gérer l'ordre d'héritage serait plus robuste (e.g., analyse topologique)
     if (const auto block = dynamic_cast<BlockAST*>(ast.get())) {
         for (const auto& stmt : block->statements) {

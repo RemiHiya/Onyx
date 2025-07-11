@@ -142,6 +142,9 @@ void FunctionDefinitionAST::analyse(SymbolTable &table) {
 }
 
 void FunctionDefinitionAST::analyse(SymbolTable& table, string parentStruct) {
+    if (!table.addSymbol(getSignature(), {returnType->type})) {
+        Logger::Error("Function '" + name + "' already defined. (signature : " + getSignature() + ")");
+    }
     table.enterScope();
 
     for (const auto& param : params) {

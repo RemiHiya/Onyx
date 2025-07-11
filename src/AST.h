@@ -85,8 +85,9 @@ enum class ExternType {
     List        // lib{foo, bar}
 };
 
-class ExternStatementAST final : public AST { // Une déclaration, pas une expression
+class ExternStatementAST final : public AST {
 public:
+    // TODO : remove specific imports (always import all)
     std::string libraryName;
     ExternType type;
     std::string specificMember;          // Used if type is Specific : lib.foo
@@ -282,6 +283,6 @@ public:
 class ExternExprAST final : public ExprAST {
 public:
     string body;
-    ExternExprAST(const string &body) : body(body) {}
+    explicit ExternExprAST(string body) : body(std::move(body)) {}
     string code() override;
 };

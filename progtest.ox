@@ -1,4 +1,5 @@
-//extern analysisTest*;
+extern analysisTest*;
+extern stdlib*;
 
 struct Parent {
     int a;
@@ -13,5 +14,6 @@ extends Parent {
 
 int main() {
     Parent test = Parent(42, 0.69);
+    print(1);
     return test.testMethod(1);
 }
