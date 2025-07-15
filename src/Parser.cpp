@@ -210,8 +210,13 @@ unique_ptr<ExprAST> Parser::parsePostfixExpr() {
                 Logger::Error("Expected method name after '.'.");
                 return nullptr;
             }
-            std::string methodName = currentToken.value;
+            std::string accessName = currentToken.value;
             nextToken(); // eat the method name
+
+            if (currentToken.type != TokenType::T_LParen) {
+                expr = make_unique<FieldAccessAST>(move(expr), accessName);
+                continue;
+            }
 
             eat(TokenType::T_LParen);
 
@@ -231,7 +236,7 @@ unique_ptr<ExprAST> Parser::parsePostfixExpr() {
             }
             eat(TokenType::T_RParen);
 
-            expr = make_unique<MethodCallAST>(move(expr), methodName, move(args));
+            expr = make_unique<MethodCallAST>(move(expr), accessName, move(args));
         } else {
             // Break if it's not a '.'
             break;

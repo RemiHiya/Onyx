@@ -8,12 +8,13 @@ struct Parent {
 
 extends Parent {
     int testMethod(int tt) {
+        a = 2;
         return a;
     }
 }
 
 int main() {
     Parent test = Parent(42, 0.69);
-    print(1);
-    return test.testMethod(1);
+    test.testMethod(5555);
+    return test.a;
 }

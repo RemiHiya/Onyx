@@ -165,14 +165,20 @@ void FunctionDefinitionAST::analyse(SymbolTable& table, string parentStruct) {
         // TODO : void functions
         for (const auto& stmt : block->statements) {
             if (const auto ret = dynamic_cast<ReturnAST*>(stmt.get())) {
-                if (const auto var = dynamic_cast<VariableExprAST*>(ret->value.get())) {
+                auto* value = ret->value.get();
+                auto* var = dynamic_cast<VariableExprAST*>(value);
+
+                if (const auto* field = dynamic_cast<FieldAccessAST*>(value); var && !field) {
                     var->analyse(table, type, parentStruct);
                 } else {
-                    ret->value->analyse(table, type);
+                    value->analyse(table, type);
                 }
+
                 if (type != returnType->type) {
-                    Logger::Error("Invalid return type, expected '"+returnType->type+"' but found '"+type+"'.");
+                    Logger::Error("Invalid return type, expected '" + returnType->type +
+                                  "' but found '" + type + "'.");
                 }
+
                 continue;
             }
             if (const auto var = dynamic_cast<VariableExprAST*>(stmt.get())) {
@@ -450,6 +456,34 @@ string MethodCallAST::code() {
         }
     }
     return code + ')';
+}
+
+void FieldAccessAST::analyse(SymbolTable &table, string &a) {
+    string ownerType;
+    ownerExpr->analyse(table, ownerType);
+    if (ownerType == "error_type") {
+        a = "error_type";
+        return;
+    }
+
+    // Extract the type (without the pointer symbol)
+    if (!ownerType.empty() && ownerType.back() == '*') {
+        ownerType.pop_back();
+    }
+
+    if (const auto fieldSymbol = table.lookupField(ownerType, name)) {
+        a = fieldSymbol->type;
+    } else {
+        Logger::Error("Field '" + name + "' does not exist in struct '" + ownerType + "'.");
+        a = "error_type";
+    }
+}
+
+
+
+string FieldAccessAST::code() {
+    string code = ownerExpr->code();
+    return ownerExpr->code() + "->" + name;
 }
 
 void VariableDeclarationAST::analyse(SymbolTable &table) {

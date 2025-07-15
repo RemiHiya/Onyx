@@ -59,10 +59,11 @@ public:
     string code() override;
 };
 
-class VariableExprAST final : public ExprAST {
-    std::string name;
+class VariableExprAST : public ExprAST {
     bool isField;
 public:
+    std::string name;
+
     void analyse(SymbolTable& table, string& a) override;
     void analyse(SymbolTable& table, string& a, const std::string& currentStruct = "");
     explicit VariableExprAST(std::string name) : name(std::move(name)), isField(false) {}
@@ -173,6 +174,14 @@ public:
     string code() override;
     MethodCallAST(unique_ptr<ExprAST> owner, string name, vector<unique_ptr<ExprAST>> params) :
         FunctionCallAST(move(name), move(params)), ownerExpr(move(owner)) {}
+};
+
+class FieldAccessAST final : public VariableExprAST {
+    unique_ptr<ExprAST> ownerExpr;
+public:
+    void analyse(SymbolTable &table, string &a) override;
+    string code() override;
+    FieldAccessAST(unique_ptr<ExprAST> owner, string name) : VariableExprAST(move(name)), ownerExpr(move(owner)) {}
 };
 
 class VariableDeclarationAST final : public AST {
