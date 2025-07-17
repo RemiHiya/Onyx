@@ -379,44 +379,7 @@ unique_ptr<ExternStatementAST> Parser::parseExternStatement() {
     std::string libName = currentToken.value;
     eat(TokenType::T_ID);
 
-    if (currentToken.type == TokenType::T_Mul) { // extern lib*
-        eat(TokenType::T_Mul);
-        return make_unique<ExternStatementAST>(libName, ExternType::All);
-    }
-    // FIXME
-    /*
-    if (currentToken.type == TokenType::T_Dot) { // extern lib.foo
-        eat(TokenType::T_Dot);
-        if (currentToken.type != TokenType::T_ID) {
-            Logger::Error("Expected member name after '.'.");
-            return nullptr;
-        }
-        std::string member = currentToken.value;
-        eat(TokenType::T_ID);
-        return make_unique<ExternStatementAST>(libName, member);
-    }
-    if (currentToken.type == TokenType::T_LBrace) { // extern lib{foo, bar}
-        eat(TokenType::T_LBrace);
-        std::vector<std::string> members;
-        while (currentToken.type != TokenType::T_RBrace) {
-            if (currentToken.type != TokenType::T_ID) {
-                Logger::Error("Expected identifier in extern list.");
-                return nullptr;
-            }
-            members.push_back(currentToken.value);
-            eat(TokenType::T_ID);
-            if (currentToken.type == TokenType::T_Comma) {
-                eat(TokenType::T_Comma);
-            } else if (currentToken.type != TokenType::T_RBrace) {
-                Logger::Error("Expected ',' or '}' in extern list.");
-                return nullptr;
-            }
-        }
-        eat(TokenType::T_RBrace);
-        return make_unique<ExternStatementAST>(libName, members);
-    }
-    Logger::Error("Unexpected token after library name in 'extern' statement.");*/
-    return nullptr;
+    return make_unique<ExternStatementAST>(libName);
 }
 
 // TODO : type with generics parsing (Type<A,B>)

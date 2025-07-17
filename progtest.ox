@@ -1,5 +1,5 @@
-extern analysisTest*;
-extern stdlib*;
+extern analysisTest;
+extern stdlib;
 
 struct Parent {
     int a;

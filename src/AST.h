@@ -79,27 +79,11 @@ public:
     string code() override;
 };
 
-enum class ExternType {
-    All,        // lib*
-    Specific,   // lib.foo
-    List        // lib{foo, bar}
-};
-
 class ExternStatementAST final : public AST {
 public:
-    // TODO : remove specific imports (always import all)
     std::string libraryName;
-    ExternType type;
-    std::string specificMember;          // Used if type is Specific : lib.foo
-    std::vector<std::string> memberList; // Used if type is List : lib{foo, bar}
-    // TODO : analysis
 
-    ExternStatementAST(std::string libName, ExternType t) :
-        libraryName(std::move(libName)), type(t) {}
-    ExternStatementAST(std::string libName, std::string member) :
-        libraryName(std::move(libName)), type(ExternType::Specific), specificMember(std::move(member)) {}
-    ExternStatementAST(std::string libName, std::vector<std::string> members) :
-        libraryName(std::move(libName)), type(ExternType::List), memberList(std::move(members)) {}
+    explicit ExternStatementAST(std::string libName) : libraryName(std::move(libName)) {}
 };
 
 class TypeAST final : public AST { // Un type
