@@ -159,14 +159,8 @@ unique_ptr<AST> Parser::parseStatement() {
         case TokenType::T_If:      return parseIfStatement();
         case TokenType::T_Static:  return parseStaticDefinition();
         case TokenType::T_ID: {
-            if (peek(1).type == TokenType::T_LParen) {
-                return parseFunctionCall();
-            }
             if (peek(1).type == TokenType::T_ID && peek(2).type == TokenType::T_LParen) {
                 return parseFunctionDefinition(false);
-            }
-            if (peek(1).type == TokenType::T_Assign) {
-                return parseVariableAssignment();
             }
             if (peek(1).type == TokenType::T_ID && peek(2).type == TokenType::T_Assign) {
                 return parseVariableDeclaration();
@@ -201,7 +195,6 @@ unique_ptr<ExprAST> Parser::parsePostfixExpr() {
         return nullptr;
 
     // If a '.' is found, then process the method call
-    // TODO : field access (obj.field)
     while (true) {
         if (currentToken.type == TokenType::T_Dot) {
             nextToken(); // Eat the dot
@@ -253,12 +246,20 @@ unique_ptr<ExprAST> Parser::parseOpRHS(const int exprPrecedence, unique_ptr<Expr
 
         auto op = currentToken.type;
         nextToken(); // eat the operator
-        auto RHS = parseIdentifierExpr(); // Parse the right side of the current expression
+
+        // If it's a simple assignment, create a specific AST node for it.
+        if (op == TokenType::T_Assign) {
+            auto RHS = parseExpr();
+            if (!RHS) return nullptr;
+            LHS = make_unique<VariableAssignmentAST>(move(LHS), move(RHS));
+            continue;
+        }
+
+        auto RHS = parseUnaryExpr(); // Parse the right side of the current expression
         if (!RHS)
             return nullptr;
 
-        int nextPrecedence = getTokenPrecedence(currentToken.type);
-        if (precedence < nextPrecedence) {
+        if (const int nextPrecedence = getTokenPrecedence(currentToken.type); precedence < nextPrecedence) {
             RHS = parseOpRHS(precedence + 1, move(RHS));
             if (!RHS)
                 return nullptr;
@@ -553,17 +554,6 @@ unique_ptr<VariableDeclarationAST> Parser::parseVariableDeclaration() {
         if (!initializer) return nullptr;
     }
     return make_unique<VariableDeclarationAST>(std::move(varType), varName, std::move(initializer));
-}
-
-// var = ...
-unique_ptr<VariableAssignmentAST> Parser::parseVariableAssignment() {
-    std::string varName = currentToken.value;
-    eat(TokenType::T_ID);
-
-    eat(TokenType::T_Assign);
-    auto assign = parseExpr();
-    if (!assign) return nullptr;
-    return make_unique<VariableAssignmentAST>(varName, std::move(assign));
 }
 
 // struct name {fields...} - struct name<A,B> {fields...}

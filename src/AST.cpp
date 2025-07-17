@@ -33,7 +33,7 @@ void BlockAST::analyse(SymbolTable &table) {
 string BlockAST::code() {
     string code = "{\n";
     for (const auto& stmt : statements) {
-        code += stmt->code() + ";\n";
+        code += '\t' + stmt->code() + ";\n";
     }
     code += "}\n";
     return code;
@@ -68,29 +68,22 @@ string StringExprAST::code() {
 }
 
 void VariableExprAST::analyse(SymbolTable &table, string &a) {
-    analyse(table, a, "");
-}
-
-void VariableExprAST::analyse(SymbolTable &table, string &a, const std::string &currentStruct) {
     if (const auto symbol = table.lookupSymbol(name)) {
         a = symbol->type;
         isField = false;
         return;
     }
-    if (!currentStruct.empty()) {
-        if (const auto fieldSymbol = table.lookupField(currentStruct, name)) {
-            a = fieldSymbol->type;
-            isField = true;
-            return;
-        }
-    }
     Logger::Error("Variable '" + name + "' not declared.");
     a = "error_type";
 }
 
+
 string VariableExprAST::code() {
     if (isField) {
         return "self->" + name;
+    }
+    if (name == "this") {
+        return "self";
     }
     return name;
 }
@@ -141,11 +134,15 @@ void FunctionDefinitionAST::analyse(SymbolTable &table) {
     analyse(table, "");
 }
 
-void FunctionDefinitionAST::analyse(SymbolTable& table, string parentStruct) {
+void FunctionDefinitionAST::analyse(SymbolTable& table, const string& parentStruct) {
     if (!table.addSymbol(getSignature(), {returnType->type})) {
         Logger::Error("Function '" + name + "' already defined. (signature : " + getSignature() + ")");
     }
     table.enterScope();
+
+    if (!parentStruct.empty()) {
+        table.addSymbol("this", {parentStruct + "*", SymbolInfo::Variable});
+    }
 
     for (const auto& param : params) {
         if (!table.addSymbol(param->name, {param->type->type})) {
@@ -166,13 +163,8 @@ void FunctionDefinitionAST::analyse(SymbolTable& table, string parentStruct) {
         for (const auto& stmt : block->statements) {
             if (const auto ret = dynamic_cast<ReturnAST*>(stmt.get())) {
                 auto* value = ret->value.get();
-                auto* var = dynamic_cast<VariableExprAST*>(value);
 
-                if (const auto* field = dynamic_cast<FieldAccessAST*>(value); var && !field) {
-                    var->analyse(table, type, parentStruct);
-                } else {
-                    value->analyse(table, type);
-                }
+                value->analyse(table, type);
 
                 if (type != returnType->type) {
                     Logger::Error("Invalid return type, expected '" + returnType->type +
@@ -181,10 +173,18 @@ void FunctionDefinitionAST::analyse(SymbolTable& table, string parentStruct) {
 
                 continue;
             }
-            if (const auto var = dynamic_cast<VariableExprAST*>(stmt.get())) {
+            if (auto* assign = dynamic_cast<VariableAssignmentAST*>(stmt.get())) {
+                if (auto* varExpr = dynamic_cast<VariableExprAST*>(assign->target.get())) {
+                    varExpr->isField = true;
+                }
+                if (auto* varExpr = dynamic_cast<VariableExprAST*>(assign->value.get())) {
+                    varExpr->isField = true;
+                }
                 string tmp;
-                var->analyse(table, tmp, parentStruct);
-            } else if (const auto expr = dynamic_cast<ExprAST*>(stmt.get())){
+                assign->analyse(table, tmp);
+                continue; // Continue to the next statement
+            }
+            if (const auto expr = dynamic_cast<ExprAST*>(stmt.get())){
                 string tmp;
                 expr->analyse(table, tmp);
             } else {
@@ -517,15 +517,39 @@ string VariableDeclarationAST::code() {
 }
 
 void VariableAssignmentAST::analyse(SymbolTable &table) {
-    const optional<SymbolInfo> lookup = table.lookupSymbol(name);
+    string targetType;
+    target->analyse(table, targetType);
+    const optional<SymbolInfo> lookup = table.lookupSymbol(targetType);
     if (!lookup.has_value()) {
-        Logger::Error("Variable '"+name+"' does not exists.");
+        Logger::Error("Variable '"+targetType+"' does not exists.");
     }
     string assignment;
     value->analyse(table, assignment);
     if (lookup.value().metaType != SymbolInfo::Variable || assignment != lookup.value().type) {
-        Logger::Error("Type mismatch in variable assignment '" + name + "'. Expected '" + lookup.value().type + "' but got '" + assignment + "'.");
+        Logger::Error("Type mismatch in variable assignment '" + targetType + "'. Expected '" + lookup.value().type + "' but got '" + assignment + "'.");
     }
+}
+
+void VariableAssignmentAST::analyse(SymbolTable &table, string &a) {
+    string targetType;
+    target->analyse(table, targetType);
+
+    if (targetType == "error_type") {
+        return; // Error already logged
+    }
+
+    string valueType;
+    value->analyse(table, valueType);
+
+    if (targetType != valueType) {
+        Logger::Error("Type mismatch in assignment. Cannot assign '" + valueType + "' to '" + targetType + "'.");
+    }
+}
+
+string VariableAssignmentAST::code() {
+    //if (accessor.empty()) {
+        return target->code() + " = " + value->code();
+    //}
 }
 
 

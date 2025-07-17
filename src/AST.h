@@ -60,13 +60,12 @@ public:
 };
 
 class VariableExprAST : public ExprAST {
-    bool isField;
 public:
+    bool isField;
     std::string name;
 
     void analyse(SymbolTable& table, string& a) override;
-    void analyse(SymbolTable& table, string& a, const std::string& currentStruct = "");
-    explicit VariableExprAST(std::string name) : name(std::move(name)), isField(false) {}
+    explicit VariableExprAST(std::string name) : isField(false), name(std::move(name)) {}
     string code() override;
 };
 
@@ -137,7 +136,7 @@ public:
 
     void prePass(SymbolTable& table) override;
     void analyse(SymbolTable &table) override;
-    void analyse(SymbolTable &table, string parentStruct);
+    void analyse(SymbolTable &table, const string& parentStruct);
 
     FunctionDefinitionAST(std::unique_ptr<TypeAST> retType, std::string n,
                           std::vector<std::unique_ptr<FunctionParameterAST>> p,
@@ -198,12 +197,15 @@ public:
 
 class VariableAssignmentAST final : public ExprAST {
 public:
-    std::string name;
-    std::unique_ptr<ExprAST> value;
+    unique_ptr<ExprAST> target;
+    unique_ptr<ExprAST> value;
+    string accessor;
 
     void analyse(SymbolTable& table) override;
-    VariableAssignmentAST(std::string n, unique_ptr<ExprAST> val)
-        : name(std::move(n)), value(std::move(val)) {}
+    void analyse(SymbolTable& table, string& a);
+    string code() override;
+    VariableAssignmentAST(unique_ptr<ExprAST> target, unique_ptr<ExprAST> val)
+        : target(std::move(target)), value(std::move(val)) {}
 };
 
 class GenericParameterAST final : public AST { // Un paramètre générique

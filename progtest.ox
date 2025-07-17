@@ -6,15 +6,24 @@ struct Parent {
     float b;
 }
 
+struct other {
+    int o;
+}
+
+extends other {
+}
+
 extends Parent {
-    int testMethod(int tt) {
-        a = 2;
-        return a;
+    int testMethod(other oth) {
+        int tmp = this.a;
+        oth.o = this.a;
+        return oth.o;
     }
 }
 
 int main() {
     Parent test = Parent(42, 0.69);
-    test.testMethod(5555);
-    return test.a;
+    other o = other(666);
+    test.testMethod(o);
+    return o.o;
 }
