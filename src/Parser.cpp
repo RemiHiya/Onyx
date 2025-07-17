@@ -255,7 +255,7 @@ unique_ptr<ExprAST> Parser::parseOpRHS(const int exprPrecedence, unique_ptr<Expr
             continue;
         }
 
-        auto RHS = parseUnaryExpr(); // Parse the right side of the current expression
+        auto RHS = parsePostfixExpr(); // Parse the right side of the current expression
         if (!RHS)
             return nullptr;
 
