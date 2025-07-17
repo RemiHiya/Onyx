@@ -36,7 +36,7 @@ optional<string> Onyx::Compile(const string &sourcefile) {
     bool flag = false;
     // Analysis & code generation of used modules
     for (auto& [module, ast] : map) {
-        AnalyseAST(ast, table);
+        ast->analyse(table);
 
         // Generate the #includes
         string imports;
@@ -84,7 +84,6 @@ optional<string> Onyx::Compile(const string &sourcefile) {
     }
 
     // Compilation
-    //return nullopt;  // FIXME
     string executable;
 #ifdef OS_WINDOWS
     executable = "a.exe";
@@ -125,7 +124,7 @@ unique_ptr<BlockAST> Onyx::BuildAST(const string& sourcefile) {
 string moduleName(const string& path) {
     return filesystem::path(path).stem().string();
 }
-bool contains(const std::vector<string>& vec, string element) {
+bool contains(const std::vector<string>& vec, const string& element) {
     for (const auto & i : vec) {
         if (i == element) {
             return true;
@@ -171,12 +170,3 @@ map<string, unique_ptr<BlockAST>> Onyx::BuildASTMap(const string &sourcefile) {
     result.emplace(moduleName(sourcefile), move(main));
     return result;
 }
-
-/**
- * @brief Hoist functions, structs, etc. and analyse the given AST
- * @param ast the AST to analyse
- */
-void Onyx::AnalyseAST(const std::unique_ptr<BlockAST>& ast, SymbolTable table) {
-    ast->analyse(table);
-}
-
