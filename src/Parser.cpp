@@ -639,6 +639,9 @@ unique_ptr<ExtendsStatementAST> Parser::parseExtendsStatement() {
 // return Expression
 unique_ptr<ReturnAST> Parser::parseReturn() {
     eat(TokenType::T_Return);
+    if (currentToken.type == TokenType::T_Semicolon) {
+        return make_unique<ReturnAST>(nullptr);
+    }
     auto ret = parseExpr();
     if (!ret) return nullptr;
     return make_unique<ReturnAST>(move(ret));

@@ -101,6 +101,7 @@ void OperationExprAST::analyse(SymbolTable &table, string &a) {
     a = lhsType;
 }
 
+// REWORK
 string OperationExprAST::code() {
     string ope = tokenToString(op);
     return LHS->code() + ' ' + ope + ' ' + RHS->code();
@@ -108,7 +109,7 @@ string OperationExprAST::code() {
 
 // REWORK : maybe add other primitives
 bool isPrimitive(const string& type) {
-    const set<string> primitives = {"int", "float", "double", "bool"};
+    const set<string> primitives = {"int", "float", "double", "bool", "void"};
     return primitives.contains(type);
 }
 
@@ -159,12 +160,24 @@ void FunctionDefinitionAST::analyse(SymbolTable& table, const string& parentStru
         }
     }
     else if (const auto block = dynamic_cast<BlockAST*>(body.get())) {
-        // TODO : void functions
         for (const auto& stmt : block->statements) {
             if (const auto ret = dynamic_cast<ReturnAST*>(stmt.get())) {
-                auto* value = ret->value.get();
-
-                value->analyse(table, type);
+                if (ret->value != nullptr) {
+                    auto* value = ret->value.get();
+                    value->analyse(table, type);
+                }
+                // Void function case
+                if (returnType->type == "void") {
+                    if (type.empty()) {
+                        continue;
+                    }
+                    Logger::Error("Can not return '" + type + "' from void function.");
+                    continue;
+                }
+                // Non-void function case
+                if (type.empty()) {
+                    Logger::Error("Function should return '" + returnType->type + "'.");
+                }
 
                 if (type != returnType->type) {
                     Logger::Error("Invalid return type, expected '" + returnType->type +
@@ -192,7 +205,7 @@ void FunctionDefinitionAST::analyse(SymbolTable& table, const string& parentStru
             }
         }
     }
-    if (type.empty()) {
+    if (type.empty() && returnType->type != "void") {
         Logger::Error("Missing return statement in function '" + name +"'.");
     }
 
@@ -355,6 +368,7 @@ bool ExtendsStatementAST::isFieldOnly() {
 }
 
 string ReturnAST::code() {
+    if (value == nullptr) return "return";
     return "return " + value->code();
 }
 
