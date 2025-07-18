@@ -165,6 +165,9 @@ unique_ptr<AST> Parser::parseStatement() {
             if (peek(1).type == TokenType::T_ID && peek(2).type == TokenType::T_Assign) {
                 return parseVariableDeclaration();
             }
+            if (peek(1).type == TokenType::T_LT) {
+                return parseVariableDeclaration();
+            }
             if (peek(1).type == TokenType::T_ID) { // variable declaration without initializer
                 return parseVariableDeclaration();
             }
@@ -384,23 +387,37 @@ unique_ptr<ExternStatementAST> Parser::parseExternStatement() {
 
 // TODO : type with generics parsing (Type<A,B>)
 unique_ptr<TypeAST> Parser::parseType() {
-    unique_ptr<TypeAST> type;
-    if (currentToken.type == TokenType::T_ID && currentToken.value == "int") {
-        type = make_unique<TypeAST>("int");
-        eat(TokenType::T_ID);
-        return type;
-    } if (currentToken.type == TokenType::T_ID && currentToken.value == "string") {
-        type = make_unique<TypeAST>("string");
-        eat(TokenType::T_ID);
-        return type;
-    } if (currentToken.type == TokenType::T_ID) { // Custom type
-        type = make_unique<TypeAST>(currentToken.value);
-        eat(TokenType::T_ID);
-        return type;
+    if (currentToken.type != TokenType::T_ID) {
+        Logger::Report(currentToken, "Expected a type name.");
+        return nullptr;
+    }
+    string baseTypeName = currentToken.value;
+    eat(TokenType::T_ID);
+
+    if (currentToken.type == TokenType::T_LT) {
+        eat(TokenType::T_LT);
+        vector<unique_ptr<TypeAST>> genericArgs;
+        while (currentToken.type != TokenType::T_GT) {
+            if (auto argType = parseType()) {
+                genericArgs.push_back(move(argType));
+            } else {
+                return nullptr; // Error while parsing the generic argument
+            }
+            if (currentToken.type == TokenType::T_Comma) {
+                eat(TokenType::T_Comma);
+            } else if (currentToken.type != TokenType::T_GT) {
+                Logger::Error("Expected ',' or '>' in generic parameter list.");
+                return nullptr;
+            }
+        }
+        eat(TokenType::T_GT);
+        return make_unique<TypeAST>(baseTypeName, move(genericArgs));
     }
 
+    return make_unique<TypeAST>(baseTypeName);
+
     // Parse array : [type] or [type, size]
-    if (currentToken.type == TokenType::T_LBracket) {
+    /*if (currentToken.type == TokenType::T_LBracket) {
         eat(TokenType::T_LBracket);
         unique_ptr<ExprAST> arraySize = nullptr;
         if (currentToken.type != TokenType::T_RBracket) {
@@ -412,10 +429,10 @@ unique_ptr<TypeAST> Parser::parseType() {
             // TODO : Array parsing
         }
         eat(TokenType::T_RBracket);
-        return make_unique<TypeAST>(std::move(type), std::move(arraySize));
+        return make_unique<TypeAST>(std::move(baseTypeName), std::move(arraySize));
     }
     Logger::Report(currentToken, "Expected a type.");
-    return nullptr;
+    return nullptr;*/
 }
 
 // type name

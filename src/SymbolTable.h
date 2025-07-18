@@ -13,7 +13,7 @@
 
 struct SymbolInfo {
     enum SymbolType {
-        Function, Structure, Variable, Generic
+        Function, Structure, Variable, Generic, Type
     };
     std::string type;
     SymbolType metaType;
@@ -31,6 +31,23 @@ class SymbolTable {
 public:
     SymbolTable() {
         enterScope();
+        addSymbol("int", {"int", SymbolInfo::Type});
+        addSymbol("uint", {"unsigned int", SymbolInfo::Type});
+        addSymbol("int8", {"char", SymbolInfo::Type});
+        addSymbol("uint8", {"unsigned char", SymbolInfo::Type});
+        addSymbol("int16", {"short", SymbolInfo::Type});
+        addSymbol("uint16", {"unsigned short", SymbolInfo::Type});
+        addSymbol("int32", {"int", SymbolInfo::Type});
+        addSymbol("uint32", {"unsigned int", SymbolInfo::Type});
+        addSymbol("int64", {"long", SymbolInfo::Type});
+        addSymbol("uint64", {"unsigned long", SymbolInfo::Type});
+
+        addSymbol("float", {"float", SymbolInfo::Type});
+        addSymbol("double", {"double", SymbolInfo::Type});
+        addSymbol("ldouble", {"long double", SymbolInfo::Type});
+
+        addSymbol("char", {"char", SymbolInfo::Type});
+        addSymbol("uchar", {"unsigned char", SymbolInfo::Type});
     }
 
     void enterScope() {

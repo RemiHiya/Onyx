@@ -113,6 +113,17 @@ bool isPrimitive(const string& type) {
     return primitives.contains(type);
 }
 
+void TypeAST::analyse(SymbolTable &table) {
+    const auto lookup = table.lookupSymbol(type);
+    if (lookup == nullopt) {
+        Logger::Error("Type '" + type + "' does not exists.");
+        return;
+    }
+    if (lookup->metaType != SymbolInfo::Structure && lookup->metaType != SymbolInfo::Type) {
+        Logger::Error("Type '" + type + "' does not exists.");
+    }
+}
+
 string TypeAST::code() {
     if (isPrimitive(type)) {
         return type;
@@ -263,7 +274,7 @@ string StructFieldAST::code() {
 }
 
 void StructDefinitionAST::prePass(SymbolTable &table) {
-    if (!table.addSymbol(name, {name})) {
+    if (!table.addSymbol(name, {name, SymbolInfo::Structure})) {
         Logger::Error("Structure '" + name + "' already defined.");
     }
 }
@@ -507,10 +518,10 @@ void VariableDeclarationAST::analyse(SymbolTable &table) {
     }
 
     // TODO : check if the type exists
-    //if (table.lookupSymbol(type->type) == nullopt) {
-    //    Logger::Error("Type '" + type->type + "' does not exists.");
-    //    return;
-    //}
+    type->analyse(table);
+    for (const auto& gen : type->genericArgs) {
+        gen->analyse(table);
+    }
     const optional<SymbolInfo> lookup = table.lookupSymbol(name);
     if (lookup.has_value() && lookup.value().metaType == SymbolInfo::Variable) {
         Logger::Error("Variable '" + name + "' already defined in this scope.");

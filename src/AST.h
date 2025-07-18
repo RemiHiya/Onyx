@@ -93,6 +93,8 @@ public:
     bool isArray = false;
     std::unique_ptr<ExprAST> arraySize; // Optional: for fixed-size arrays
 
+    void analyse(SymbolTable &table) override;
+
     explicit TypeAST(string t) : type(std::move(t)) {}
     TypeAST(string base, vector<unique_ptr<TypeAST>> args)
         : type(std::move(base)), genericArgs(std::move(args)) {}
