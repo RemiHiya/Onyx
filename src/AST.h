@@ -89,17 +89,35 @@ public:
 class TypeAST final : public AST { // Un type
 public:
     std::string type;
+    vector<unique_ptr<TypeAST>> genericArgs;
     bool isArray = false;
     std::unique_ptr<ExprAST> arraySize; // Optional: for fixed-size arrays
 
     explicit TypeAST(string t) : type(std::move(t)) {}
+    TypeAST(string base, vector<unique_ptr<TypeAST>> args)
+        : type(std::move(base)), genericArgs(std::move(args)) {}
     explicit TypeAST(const unique_ptr<TypeAST> &type, std::unique_ptr<ExprAST> size) : type(type->type), arraySize(move(size)) {}
-    //explicit TypeAST(BaseType bt) : baseType(bt) {}
-    //explicit TypeAST(std::string customName) : baseType(BaseType::Custom), customTypeName(std::move(customName)) {}
-    // For array types
-    //explicit TypeAST(const std::unique_ptr<TypeAST> &elementType, std::unique_ptr<ExprAST> size = nullptr)
-    //    : baseType(elementType->baseType), customTypeName(elementType->customTypeName), isArray(true), arraySize(std::move(size)) {}
     string code() override;
+
+    string getMangledName() const {
+        string mangled = type;
+        if (!genericArgs.empty()) {
+            mangled += "<";
+            for (const auto& arg : genericArgs) {
+                mangled += arg->getMangledName() + ",";
+            }
+            mangled.pop_back(); // Remove the last ,
+            mangled += ">";
+        }
+        return mangled;
+    }
+    unique_ptr<TypeAST> clone() const {
+        vector<unique_ptr<TypeAST>> clonedArgs;
+        for (const auto& arg : genericArgs) {
+            clonedArgs.push_back(arg->clone());
+        }
+        return make_unique<TypeAST>(type, std::move(clonedArgs));
+    }
 };
 
 class FunctionParameterAST final : public AST { // Un paramètre
