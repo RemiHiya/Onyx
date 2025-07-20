@@ -11,10 +11,9 @@
  * @brief Check if a type is instantiated, if not, create an instance according to the template
  * @param type The type to check
  * @param table
- * @param globalBlock
  * @return The type signature after instantiation
  */
-string ensureTypeIsInstantiated(TypeAST* type, SymbolTable& table, BlockAST& globalBlock) {
+string ensureTypeIsInstantiated(TypeAST* type, SymbolTable& table) {
     if (type->genericArgs.empty()) {
         return type->type; // Simple type
     }
@@ -45,19 +44,20 @@ string ensureTypeIsInstantiated(TypeAST* type, SymbolTable& table, BlockAST& glo
     // 3. Substitute types in the AST
     substitute_recursive(clonedStruct, typeMap);
 
-    // 4. "Mangler" le nom de la nouvelle structure
+    // 4. Generate an identifier for the type
     string concreteName = type->type;
     for(const auto& arg : type->genericArgs) {
         concreteName += "_" + arg->type;
     }
     clonedStruct->name = concreteName;
 
-    // 5. Analyser le nouvel AST
+    // 5. Analyse the generated type
     clonedStruct->prePass(table);
     clonedStruct->analyse(table);
 
-    // 6. Ajouter le nouvel AST au programme et marquer comme instancié
-    globalBlock.statements.push_back(move(clonedASTNode));
+    // 6. Register the generated type
+    table.registerGeneric(move(clonedASTNode));
+    //globalBlock.statements.push_back(move(clonedASTNode));
     table.addInstantiation(mangledName);
 
     return concreteName;

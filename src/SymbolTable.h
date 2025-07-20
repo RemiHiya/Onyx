@@ -13,6 +13,9 @@
 
 #include "AST.h"
 class StructDefinitionAST;
+class BlockAST;
+class AST;
+
 using namespace std;
 
 
@@ -35,6 +38,7 @@ class SymbolTable {
 
     std::map<std::string, const StructDefinitionAST*> structTemplates;
     set<string> instantiations;
+    unique_ptr<BlockAST> generics; // Block holding the monomorphs structure
 
 public:
     SymbolTable() {
@@ -100,6 +104,8 @@ public:
         }
         return std::nullopt;
     }
+
+    void registerGeneric(unique_ptr<AST> ast) const;
 
     std::optional<SymbolInfo> lookupField(const std::string& structName, const std::string& fieldName) {
         if (const auto it = knownStructs.find(structName); it != knownStructs.end()) {
