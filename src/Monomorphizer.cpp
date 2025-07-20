@@ -7,12 +7,6 @@
 
 #include "Logger.h"
 
-/**
- * @brief Check if a type is instantiated, if not, create an instance according to the template
- * @param type The type to check
- * @param table
- * @return The type signature after instantiation
- */
 string ensureTypeIsInstantiated(TypeAST* type, SymbolTable& table) {
     if (type->genericArgs.empty()) {
         return type->type; // Simple type

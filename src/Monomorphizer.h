@@ -22,4 +22,12 @@ using namespace std;
  */
 void substitute_recursive(AST* node, const map<string, unique_ptr<TypeAST>>& typeMap);
 
+/**
+ * @brief Check if a type is instantiated, if not, create an instance according to the template
+ * @param type The type to check
+ * @param table
+ * @return The type signature after instantiation
+ */
+string ensureTypeIsInstantiated(TypeAST* type, SymbolTable& table);
+
 #endif //MONOMORPHIZER_H

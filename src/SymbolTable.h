@@ -41,7 +41,7 @@ class SymbolTable {
     unique_ptr<BlockAST> generics; // Block holding the monomorphs structure
 
 public:
-    SymbolTable() {
+    SymbolTable() : generics(make_unique<BlockAST>()) {
         enterScope();
         addSymbol("int", {"int", SymbolInfo::Type});
         // TODO : more types

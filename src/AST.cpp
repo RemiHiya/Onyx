@@ -153,12 +153,21 @@ void FunctionDefinitionAST::analyse(SymbolTable& table, const string& parentStru
     }
     table.enterScope();
 
+    const string concreteReturnType = ensureTypeIsInstantiated(returnType.get(), table);
+    if (concreteReturnType == "error_type") {
+        Logger::Error("Error while encoutering generics in function '" + name + "'.");
+        return;
+    }
+
     if (!parentStruct.empty()) {
         table.addSymbol("this", {parentStruct + "*", SymbolInfo::Variable});
     }
 
     for (const auto& param : params) {
-        if (!table.addSymbol(param->name, {param->type->type})) {
+        string concreteParamType = ensureTypeIsInstantiated(param->type.get(), table);
+        if (concreteParamType == "error_type") continue;
+
+        if (!table.addSymbol(param->name, {concreteParamType, SymbolInfo::Variable})) {
             Logger::Error("Parameter '" + param->name + "' already defined in function '" + name + "'.");
         }
     }
@@ -523,6 +532,11 @@ void VariableDeclarationAST::analyse(SymbolTable &table) {
         initializer->analyse(table, initType);
     }
 
+    const string concreteTypeName = ensureTypeIsInstantiated(type.get(), table);
+    if (concreteTypeName == "error_type") {
+        return;
+    }
+
     // TODO : check if the type exists
     type->analyse(table);
     for (const auto& gen : type->genericArgs) {
@@ -533,8 +547,8 @@ void VariableDeclarationAST::analyse(SymbolTable &table) {
         Logger::Error("Variable '" + name + "' already defined in this scope.");
         return;
     }
-    if (initializer && type->type != initType) {
-        Logger::Error("Type mismatch in variable declaration '" + name + "'. Expected '" + type->type + "' but got '" + initType + "'.");
+    if (initializer && concreteTypeName != initType) {
+        Logger::Error("Type mismatch in variable declaration '" + name + "'. Expected '" + concreteTypeName + "' but got '" + initType + "'.");
         return;
     }
 
