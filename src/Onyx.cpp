@@ -32,9 +32,15 @@ optional<string> Onyx::Compile(const string &sourcefile) {
     for (auto &ast: map | views::values) {
         ast->prePass(table);
     }
+    // Analyse all the modules
+    for (auto &ast: map | views::values) {
+        ast->analyse(table);
+    }
+
+    map["generics"] = move(table.generics);
 
     bool flag = false;
-    // Analysis & code generation of used modules
+    // Code generation of used modules
     for (auto& [module, ast] : map) {
         ast->analyse(table);
 

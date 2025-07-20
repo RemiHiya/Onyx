@@ -38,9 +38,10 @@ class SymbolTable {
 
     std::map<std::string, const StructDefinitionAST*> structTemplates;
     set<string> instantiations;
-    unique_ptr<BlockAST> generics; // Block holding the monomorphs structure
 
 public:
+    unique_ptr<BlockAST> generics; // Block holding the monomorphs structure
+
     SymbolTable() : generics(make_unique<BlockAST>()) {
         enterScope();
         addSymbol("int", {"int", SymbolInfo::Type});
