@@ -25,6 +25,8 @@ add_executable(Onyx src/main.cpp
         src/IR/memory.h
         build/builtins.h
         src/CloneAST.cpp
+        src/Monomorphizer.cpp
+        src/Monomorphizer.h
         # should be removed later
         # ---
 )

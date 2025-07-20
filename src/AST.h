@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "Lexer.h"
+class SymbolTable;
 #include "SymbolTable.h"
 
 using namespace std;
@@ -76,9 +77,9 @@ public:
 };
 
 class OperationExprAST final : public ExprAST {
+public:
     TokenType op;
     std::unique_ptr<ExprAST> LHS, RHS;
-public:
     void analyse(SymbolTable& table, string& a) override;
     OperationExprAST(const TokenType op, std::unique_ptr<ExprAST> LHS, std::unique_ptr<ExprAST> RHS) :
         op(op), LHS(std::move(LHS)), RHS(std::move(RHS)) {}
@@ -105,6 +106,17 @@ public:
     explicit TypeAST(string t) : type(std::move(t)) {}
     TypeAST(string base, vector<unique_ptr<TypeAST>> args) : type(std::move(base)), genericArgs(std::move(args)) {}
     explicit TypeAST(const unique_ptr<TypeAST> &type, std::unique_ptr<ExprAST> size) : type(type->type), arraySize(move(size)) {}
+
+    [[nodiscard]] string getMangledName() const {
+        string mangled = type;
+        if (!genericArgs.empty()) {
+            for (const auto& arg : genericArgs) {
+                mangled += '_' + arg->getMangledName();
+            }
+            //mangled.pop_back(); // Remove the last ,
+        }
+        return mangled;
+    }
 
     string code() override;
     [[nodiscard]] unique_ptr<AST> clone() const override;
@@ -162,8 +174,8 @@ public:
 };
 
 class FieldAccessAST final : public VariableExprAST {
-    unique_ptr<ExprAST> ownerExpr;
 public:
+    unique_ptr<ExprAST> ownerExpr;
     void analyse(SymbolTable &table, string &a) override;
     string code() override;
     FieldAccessAST(unique_ptr<ExprAST> owner, string name) : VariableExprAST(move(name)), ownerExpr(move(owner)) {}

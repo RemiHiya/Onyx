@@ -7,8 +7,13 @@
 #include <map>
 #include <optional>
 #include <ranges>
+#include <set>
 #include <string>
 #include <vector>
+
+#include "AST.h"
+class StructDefinitionAST;
+using namespace std;
 
 
 struct SymbolInfo {
@@ -27,6 +32,9 @@ using StructFieldMap = std::map<std::string, SymbolInfo>;
 class SymbolTable {
     std::vector<std::map<std::string, SymbolInfo>> scopes;
     std::map<std::string, StructFieldMap> knownStructs;
+
+    std::map<std::string, const StructDefinitionAST*> structTemplates;
+    set<string> instantiations;
 
 public:
     SymbolTable() {
@@ -67,6 +75,30 @@ public:
         }
         knownStructs[structName] = fields;
         return true;
+    }
+
+    bool addTemplate(const string& name, const StructDefinitionAST* ast) {
+        if (structTemplates.contains(name)) return false;
+        structTemplates[name] = ast;
+        return true;
+    }
+
+    const StructDefinitionAST* lookupTemplate(const string& name) {
+        if (const auto it = structTemplates.find(name); it != structTemplates.end()) {
+            return it->second;
+        }
+        return nullptr;
+    }
+
+    void addInstantiation(const string& name) {
+        instantiations.insert(name);
+    }
+
+    optional<string> findInstantiation(const string& name) {
+        if(const auto it = instantiations.find(name); it != instantiations.end()) {
+            return name;
+        }
+        return std::nullopt;
     }
 
     std::optional<SymbolInfo> lookupField(const std::string& structName, const std::string& fieldName) {

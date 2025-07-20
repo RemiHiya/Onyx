@@ -8,6 +8,7 @@
 #include <set>
 
 #include "Logger.h"
+#include "Monomorphizer.h"
 
 // Hoisting
 void BlockAST::prePass(SymbolTable &table) {
@@ -280,6 +281,11 @@ void StructDefinitionAST::prePass(SymbolTable &table) {
 }
 
 void StructDefinitionAST::analyse(SymbolTable &table) {
+    if (!genericParams.empty()) {
+        table.addTemplate(name, this);
+        return;
+    }
+
     table.enterScope();
     string sign;
 
